@@ -1,0 +1,7 @@
+connection\ConnectionActions.class
+facebook\FacebookManager.class
+user\UserActions.class
+user\UserDAO.class
+database\DatabaseManager.class
+google\GooglePlusManager.class
+user\User.class
