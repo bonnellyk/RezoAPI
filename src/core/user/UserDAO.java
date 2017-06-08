@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
+import core.socialmedia.facebook.FacebookManager;
+import core.socialmedia.google.GooglePlusManager;
 import database.DatabaseManager;
 
 public class UserDAO {
@@ -42,19 +44,18 @@ public class UserDAO {
 		return users;
 	}
 
-	public static void addNewUser(User user) {
+	public static void addNewUser(UserLogin user) {
 		try {
 			DatabaseManager db = new DatabaseManager();
 			Connection con = db.getConnection();
 
 			PreparedStatement stmt = con
-					.prepareStatement("INSERT INTO user (firstname,lastname,birthday,creation_date,email) "
-							+ "VALUES (?,?,?,?,?)");
+					.prepareStatement("INSERT INTO user (firstname,lastname,birthday,email) "
+							+ "VALUES (?,?,?,?)");
 			stmt.setString(1, user.getFirstname());
 			stmt.setString(2, user.getLastname());
-			stmt.setTimestamp(3, user.getBirthday());
-			stmt.setTimestamp(4, user.getCreationDate());
-			stmt.setString(5, user.getEmail());
+			stmt.setTimestamp(3, user.getBirthday());			
+			stmt.setString(4, user.getEmail());
 			stmt.execute();
 			con.close();	
 			
@@ -110,7 +111,7 @@ public class UserDAO {
 		return userId;
 	}
 	
-	public static int getUserId(String email) {
+	public static int getUserIdByEmail(String email) {
 		int userId = -1;
 		try {
 			DatabaseManager db = new DatabaseManager();
@@ -118,6 +119,41 @@ public class UserDAO {
 
 			PreparedStatement stmt = con.prepareStatement("SELECT user_id FROM email_binding WHERE email = ? LIMIT 1");
 			stmt.setString(1, email);
+			ResultSet rs = stmt.executeQuery();
+
+			while (rs.next()) {
+				userId = rs.getInt("user_id");
+			}
+			con.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return userId;
+	}
+	
+	public static int getUserIdByProfile(String loginAPI, String profileID) {
+		int userId = -1;
+		String tablename = "" , profileIdColumn = "";
+		
+		switch (loginAPI) {
+		case "FACEBOOK":
+			tablename = "facebook_tokens";
+			profileIdColumn = "facebook_profile_id";
+			break;
+		case "GOOGLE":
+			tablename = "google_tokens";
+			profileIdColumn = "google_profile_id";
+			break;
+		}
+		try {
+			DatabaseManager db = new DatabaseManager();
+			Connection con = db.getConnection();
+
+			PreparedStatement stmt = con.prepareStatement("SELECT user_id FROM "+tablename+" WHERE "+profileIdColumn+" = ? LIMIT 1");
+			stmt.setString(1, profileID);
 			ResultSet rs = stmt.executeQuery();
 
 			while (rs.next()) {

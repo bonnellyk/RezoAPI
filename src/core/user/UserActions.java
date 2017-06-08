@@ -11,7 +11,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import core.socialmedia.SocialMediaManager;
+import core.socialmedia.ISocialMediaManager;
+import core.socialmedia.TokenAPI;
 import core.socialmedia.facebook.FacebookManager;
 import core.socialmedia.google.GooglePlusManager;
 
@@ -34,42 +35,50 @@ public class UserActions {
 		return Response.status(200).entity(allUsers).build();
 	}
 
-	@Path("/login/{login_api}/{token}/{profile_id}")
+	@Path("/login")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response login(User user, @PathParam("login_api") String loginAPI, @PathParam("token") String token, @PathParam("profile_id") String profileId) {
+	public Response login(UserLogin user) {
 		System.out.println("TEST");
 		boolean firsttimeLogin = false;
-		SocialMediaManager socialMediaManager = null;
+		ISocialMediaManager socialMediaManager = null;
 
-		// If user doesn't exist, the system will create a new user profile
-		int userId = getUserId(user.getEmail());
-		System.out.println("USER ID = "+userId);
+		int userId = getUserId(user.getEmail(), user.getLoginAPI().toString(), user.getProfileID());
 		if (userId == -1) {
+
 			firsttimeLogin = true;
 			UserDAO.addNewUser(user);
-			userId = getUserId(user.getEmail());
+			userId = getUserId(user.getEmail(), user.getLoginAPI().toString(), user.getProfileID());
 		}
-		System.out.println("LOGIN API: "+loginAPI);
-		socialMediaManager = instantiateSocialMediaManager(loginAPI);
+
+		socialMediaManager = instantiateSocialMediaManager(user.getLoginAPI().toString());
 
 		if (socialMediaManager != null) {
-			socialMediaManager.addOrUpdateToken(userId, token, profileId);
+			TokenAPI token = new TokenAPI(userId, user.getAccessToken(), user.getProfileID());
+			socialMediaManager.addOrUpdateToken(token);
 		}
 
 		return Response.status(200).entity(firsttimeLogin).build();
 	}
 
-	private int getUserId(String email) {
-		return UserDAO.getUserId(email);
+	private int getUserId(String email, String loginAPI, String profileId) {
+		int userId = -1;
+		if(email != null && email != ""){
+			userId = UserDAO.getUserIdByEmail(email);
+		}
+		
+		if(userId == -1) {
+			userId = UserDAO.getUserIdByProfile(loginAPI, profileId);
+		}
+		return userId;
 	}
 
-	private SocialMediaManager instantiateSocialMediaManager(final String loginApi) {
-		SocialMediaManager smm = null;
+	private ISocialMediaManager instantiateSocialMediaManager(final String loginApi) {
+		ISocialMediaManager smm = null;
 		switch (loginApi) {
 		case "FACEBOOK":
-			smm = new FacebookManager();	
+			smm = new FacebookManager();
 			break;
 		case "GOOGLE":
 			smm = new GooglePlusManager();

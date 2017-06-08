@@ -1,12 +1,12 @@
 package core.socialmedia.facebook;
 
-import core.socialmedia.SocialMediaManager;
+import core.socialmedia.ISocialMediaManager;
+import core.socialmedia.TokenAPI;
 
-public class FacebookManager implements SocialMediaManager {
+public class FacebookManager implements ISocialMediaManager {
 
 	@Override
-	public void addOrUpdateToken(int userId, String token, String profileId) {
-		System.out.println("FACEBOOK MANAGER");
-		FacebookTokensDAO.insertOrReplaceToken(userId, token, profileId);
+	public void addOrUpdateToken(TokenAPI token) {		
+		FacebookTokensDAO.insertOrReplaceToken(token);
 	}	
 }
