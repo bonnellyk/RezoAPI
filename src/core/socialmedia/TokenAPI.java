@@ -11,7 +11,7 @@ public class TokenAPI {
 		this.userId = userId;
 		this.accessToken = accessToken;
 		this.profileId = profileId;
-	}
+	}	
 	
 	public int getUserId() {
 		return userId;

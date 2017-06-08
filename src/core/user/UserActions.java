@@ -74,7 +74,7 @@ public class UserActions {
 		return userId;
 	}
 
-	private ISocialMediaManager instantiateSocialMediaManager(final String loginApi) {
+	public static ISocialMediaManager instantiateSocialMediaManager(final String loginApi) {
 		ISocialMediaManager smm = null;
 		switch (loginApi) {
 		case "FACEBOOK":
